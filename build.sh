@@ -17,6 +17,7 @@ sed -i "s/^export ONLINE_API_KEY=/export ONLINE_API_KEY=$(cat ~/online-api-key)/
 
 # TLS certificates
 # Downloading a static generated binary for le_dns_online
-wget https://nightmared.fr/le_dns_online -O config/acme.sh/dnsapi/le_dns_online
+wget -N https://nightmared.fr/le_dns_online 
+cp le_dns_online config/acme.sh/dnsapi/le_dns_online
 
 docker build -t opensmtpd -f Dockerfile.runner $DOCKER_BUILDER_ARGS .
