@@ -1,0 +1,13 @@
+FROM alpine:edge
+
+RUN apk update && apk upgrade
+
+COPY prefix/libexec /usr/libexec
+COPY prefix/sbin /usr/sbin
+
+# Populate config
+RUN mkdir /etc/mail
+WORKDIR /etc/mail
+
+# Create users
+RUN mkdir -p /var/empty && adduser -D -g "SMTP Daemon" -h /var/empty -s /sbin/nologin _smtpd && adduser -D -g "SMTPD Queue" -h /var/empty -s /sbin/nologin _smtpq
