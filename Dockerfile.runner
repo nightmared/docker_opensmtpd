@@ -1,9 +1,10 @@
 FROM alpine:edge
 
-RUN apk update && apk upgrade
+RUN apk update && apk upgrade && apk add openssl curl
 
 COPY prefix/libexec /usr/libexec
 COPY prefix/sbin /usr/sbin
+COPY le_dns_online /usr/bin/
 
 # Populate config
 RUN mkdir /etc/mail
@@ -11,3 +12,7 @@ WORKDIR /etc/mail
 
 # Create users
 RUN mkdir -p /var/empty && adduser -D -g "SMTP Daemon" -h /var/empty -s /sbin/nologin _smtpd && adduser -D -g "SMTPD Queue" -h /var/empty -s /sbin/nologin _smtpq
+
+# The config file, containing the DNS name to use, the online.net API key, and the DKIM selector.
+COPY config /root/config
+RUN /root/config/config_gen.sh && env
