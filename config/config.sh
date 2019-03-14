@@ -46,8 +46,6 @@ openssl genrsa -out /etc/dkimproxy/private.key 4096
 openssl rsa -in /etc/dkimproxy/private.key -pubout -out /etc/dkimproxy/public.key
 DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p')
 
-# TODO: dovecot
-
 # Prepare acme.sh
 cd acme.sh/dnsapi
 curl -s https://raw.githubusercontent.com/nightmared/le_dns_online/master/dns_online_rust.sh | sed -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" > dns_online_rust.sh
@@ -73,6 +71,6 @@ echo "Starting now..."
 
 /usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --daemonize --user=_dkim --group=_dkim
 /usr/sbin/smtpd -f /etc/mail/smtpd.conf
-/usr/bin/dovecot
+/usr/sbin/dovecot
 # This container auto-stop after 15 days, this is a simple way of ensuring the TLS certificates are always good (as well as maintaining an important key turnover)
 sleep 15d
