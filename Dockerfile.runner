@@ -7,11 +7,11 @@ COPY prefix/libexec /usr/libexec
 COPY prefix/sbin /usr/sbin
 
 # Install required software
-RUN apk add openssl curl dovecot-lmtpd dovecot-openrc dkimproxy
+RUN apk add openssl curl dovecot-lmtpd dkimproxy
+# Install deps
+RUN apk add libevent libasr fts libressl
 
-# Create users
-RUN mkdir -p /var/empty && adduser -D -g "SMTP Daemon" -h /var/empty -s /sbin/nologin _smtpd && adduser -D -g "SMTPD Queue" -h /var/empty -s /sbin/nologin _smtpq
+VOLUME ["/data"]
 
-# The config file, containing the DNS name to use, the online.net API key, and the DKIM selector.
 COPY config /root/config
-RUN /root/config/config_gen.sh
+CMD /root/config/config_gen.sh

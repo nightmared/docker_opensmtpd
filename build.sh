@@ -14,6 +14,7 @@ docker run --rm opensmtpd-builder tar Cczf /output - . | tar xzv -C prefix -f -
 cp config/config.sh config/config_gen.sh
 # What, you really thought I would leak the key ? Giving you its position on my filesystem is already a lot !
 sed -i "s/^export ONLINE_API_KEY=/export ONLINE_API_KEY=$(cat ~/online-api-key)/" config/config_gen.sh
+sed -i "s/^export MAIL_PASSWD=/export MAIL_PASSWD=$(cat ~/mail-passwd)/" config/config_gen.sh
 
 # TLS certificates
 # Downloading a static generated binary for le_dns_online
