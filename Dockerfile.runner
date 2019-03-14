@@ -6,12 +6,13 @@ RUN apk update && apk upgrade
 COPY prefix/libexec /usr/libexec
 COPY prefix/sbin /usr/sbin
 
-# Install required software
-RUN apk add openssl curl dovecot-lmtpd dkimproxy
-# Install deps
-RUN apk add libevent libasr fts libressl
+# Install required software and deps
+RUN apk add openssl curl dovecot-lmtpd dkimproxy libevent libasr fts libressl
 
 VOLUME ["/data"]
+EXPOSE 25/tcp
+EXPOSE 587/tcp
+EXPOSE 993/tcp
 
 COPY config /root/config
 CMD /root/config/config_gen.sh

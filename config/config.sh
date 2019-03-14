@@ -10,6 +10,7 @@ export BASEDIR=/root/config
 
 # Create users
 mkdir -p /var/empty
+adduser -D -g "DKIM proxy" -h /var/empty -s /sbin/nologin _dkim
 adduser -D -g "SMTP Daemon" -h /var/empty -s /sbin/nologin _smtpd
 adduser -D -g "SMTPD Queue" -h /var/empty -s /sbin/nologin _smtpq
 adduser -D -g "Mail client" -h /data -s /sbin/nologin contact
@@ -25,6 +26,14 @@ do
 done <smtpd.conf >/etc/mail/smtpd.conf
 cp aliases /etc/mail/
 
+# dovecot.conf
+while read line ;
+do
+    eval "echo \"$line\""
+done <dovecot.conf >/etc/dovecot/dovecot.conf
+UID=$(cat /etc/passwd |grep contact | cut -d: -f3)
+CRYPT=$(echo ${MAIL_PASSWD} | /usr/bin/cryptpw -m sha512)
+echo "contact:{SHA512-CRYPT}${CRYPT}:${UID}:${UID}::/data::userdb_mail=maildir:~/Maildir" > /etc/dovecot/imap.passwd
 
 # DKIM configuration
 while read line ;
@@ -54,14 +63,16 @@ echo "Updating DKIM entries..."
 cd $BASEDIR/acme.sh
 echo "Generating a SSL certificate..."
 ./acme.sh --issue -d mail.$DOMAIN_NAME -k 4096 --dns dns_online_rust --dnssleep 5 --staging 1>&2
-ls -a /root/.acme.sh
-# Call cron every week ot update certificates if necessary
-echo "/root/config/acme.sh/acme.sh --cron --home /root/config.acme.sh > /dev/null" > /etc/periodic/weekly/acme.sh
+# Set proper permissions on certificate files
+chmod 640 /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key
 
 echo ""
 echo ""
 echo "Yay, generation succeeded !"
 echo "Starting now..."
 
-crond
-/usr/sbin/smtpd -d -f /etc/mail/smtpd.conf
+/usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --daemonize --user=_dkim --group=_dkim
+/usr/sbin/smtpd -f /etc/mail/smtpd.conf
+/usr/bin/dovecot
+# This container auto-stop after 15 days, this is a simple way of ensuring the TLS certificates are always good (as well as maintaining an important key turnover)
+sleep 15d
