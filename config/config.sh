@@ -51,9 +51,10 @@ echo "Generating a SSL certificate..."
 chmod 640 /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key
 
 echo "Generating a new DKIM private key..."
-openssl genrsa -out /etc/dkimproxy/private.key 4096
+openssl genrsa -out /etc/dkimproxy/private.key 2048
 openssl rsa -in /etc/dkimproxy/private.key -pubout -out /etc/dkimproxy/public.key
-DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p')
+chown -R _dkim:_dkim /etc/dkimproxy
+DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p' | tr -d '\n')
 echo "Updating DKIM entries..."
 # Remove previous DKIM entries
 dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -v clean-dkim-$(date +%s) 1>&2
@@ -76,7 +77,7 @@ echo ""
 echo "Yay, generation succeeded !"
 echo "Starting now..."
 
-/usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --daemonize --user=_dkim --group=_dkim
+/usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --user=_dkim --group=_dkim >>/data/dkimproxy.log 2>&1 &
 /usr/sbin/smtpd -f /etc/mail/smtpd.conf -d >>/data/smtp.log 2>&1 &
 /usr/sbin/dovecot -F >>/data/dovecot.log 2>&1 &
 # This container auto-stop after 15 days, this is a simple way of ensuring the TLS certificates are always good (as well as maintaining an important key turnover)
