@@ -3,8 +3,8 @@ FROM alpine:edge
 RUN apk update && apk upgrade
 
 # Install opensmtpd
-COPY prefix/libexec /usr/libexec
-COPY prefix/sbin /usr/sbin
+COPY prefix/usr/libexec /usr/libexec
+COPY prefix/usr/sbin /usr/sbin
 
 # Install required software and deps
 RUN apk add openssl curl dovecot-lmtpd dkimproxy libevent libasr fts libressl

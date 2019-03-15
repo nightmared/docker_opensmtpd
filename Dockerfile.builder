@@ -12,4 +12,4 @@ WORKDIR /build/${package}
 
 # Building the package
 RUN apk add gcc libressl-dev libevent-dev libc-dev fts-dev libasr-dev zlib-dev make bison file
-RUN ./configure --with-pie --prefix=/output && make -j4 && make install
+RUN ./configure --with-pie --prefix=/usr && make -j4 && make install DESTDIR=/output

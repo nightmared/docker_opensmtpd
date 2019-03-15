@@ -77,7 +77,7 @@ echo "Yay, generation succeeded !"
 echo "Starting now..."
 
 /usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --daemonize --user=_dkim --group=_dkim
-/usr/sbin/smtpd -f /etc/mail/smtpd.conf -d >>/dev/smtp.log 2>&1 &
+/usr/sbin/smtpd -f /etc/mail/smtpd.conf -d >>/data/smtp.log 2>&1 &
 /usr/sbin/dovecot -F >>/data/dovecot.log 2>&1 &
 # This container auto-stop after 15 days, this is a simple way of ensuring the TLS certificates are always good (as well as maintaining an important key turnover)
 sleep 15d
