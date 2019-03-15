@@ -41,34 +41,35 @@ do
     eval "echo \"$line\""
 done <dkimproxy_out.conf >/etc/dkimproxy/dkimproxy_out.conf
 
+# Time to generate some certificates
+cd $BASEDIR/acme.sh
+curl -s https://raw.githubusercontent.com/nightmared/le_dns_online/master/dns_online_rust.sh | sed -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" > dnsapi/dns_online_rust.sh
+chmod +x dnsapi/le_dns_online
+echo "Generating a SSL certificate..."
+./acme.sh --issue -d mail.${DOMAIN_NAME} -d ${DOMAIN_NAME} -k 4096 --dns dns_online_rust --dnssleep 5 1>&2 || :
+# Set proper permissions on certificate files
+chmod 640 /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key
+
 echo "Generating a new DKIM private key..."
 openssl genrsa -out /etc/dkimproxy/private.key 4096
 openssl rsa -in /etc/dkimproxy/private.key -pubout -out /etc/dkimproxy/public.key
 DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p')
-
-# Prepare acme.sh
-cd acme.sh/dnsapi
-curl -s https://raw.githubusercontent.com/nightmared/le_dns_online/master/dns_online_rust.sh | sed -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" > dns_online_rust.sh
-chmod +x le_dns_online
-
 echo "Updating DKIM entries..."
 # Remove previous DKIM entries
-./le_dns_online -a ${ONLINE_API_KEY} -o delete -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -v clean-dkim-$(date +%s) 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -v clean-dkim-$(date +%s) 1>&2
 # Add the DKIM key to the DNS
-./le_dns_online -a ${ONLINE_API_KEY} -o add -v dkim-${DKIM_SELECTOR}-$(date +%s) -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -d "\"v=DKIM1; p=${DKIM_KEY}\"" 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o add -v dkim-${DKIM_SELECTOR}-$(date +%s) -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -d "\"v=DKIM1; p=${DKIM_KEY}\"" 1>&2
 
 PUBLIC_IP=$(curl -s -4 ifconfig.me/ip)
 [ "z${PUBLIC_IP}" = "z" ] && echo "Couldn't determine your public ip address !" && exit 1
 echo "Updating mail.${DOMAIN_NAME} DNS entry (beware, IPv4 only !)..."
-./le_dns_online -a ${ONLINE_API_KEY} -o delete -t "A" -n mail.${DOMAIN_NAME}. -v clean-dns-$(date +%s) 1>&2
-./le_dns_online -a ${ONLINE_API_KEY} -o add -t "A" -v dns-mail-$(date +%s) -n mail.${DOMAIN_NAME}. -d ${PUBLIC_IP} 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -t "A" -n mail.${DOMAIN_NAME}. -v clean-dns-$(date +%s) 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o add -t "A" -v dns-mail-$(date +%s) -n mail.${DOMAIN_NAME}. -d ${PUBLIC_IP} 1>&2
 
-# Time to generate some certificates
-cd $BASEDIR/acme.sh
-echo "Generating a SSL certificate..."
-./acme.sh --issue -d mail.$DOMAIN_NAME -k 4096 --dns dns_online_rust --dnssleep 5 --staging 1>&2
-# Set proper permissions on certificate files
-chmod 640 /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key
+# Setting up permissions
+chown -R contact:contact /data
+chmod 777 /data
+chmod -R 770 /data/Maildir
 
 echo ""
 echo ""
@@ -76,7 +77,7 @@ echo "Yay, generation succeeded !"
 echo "Starting now..."
 
 /usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --daemonize --user=_dkim --group=_dkim
-/usr/sbin/smtpd -f /etc/mail/smtpd.conf
-/usr/sbin/dovecot
+/usr/sbin/smtpd -f /etc/mail/smtpd.conf -d >>/dev/smtp.log 2>&1 &
+/usr/sbin/dovecot -F >>/data/dovecot.log 2>&1 &
 # This container auto-stop after 15 days, this is a simple way of ensuring the TLS certificates are always good (as well as maintaining an important key turnover)
 sleep 15d

@@ -1,0 +1,1 @@
+docker run --rm -v $(pwd)/mail-data:/data -v $(pwd)/mail-certifs:/root/.acme.sh -p 25:25 -p 587:587 -p 993:993 -h mail.nightmared.fr opensmtpd
