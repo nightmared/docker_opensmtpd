@@ -46,7 +46,7 @@ cd $BASEDIR/acme.sh
 curl -s https://raw.githubusercontent.com/nightmared/le_dns_online/master/dns_online_rust.sh | sed -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" > dnsapi/dns_online_rust.sh
 chmod +x dnsapi/le_dns_online
 echo "Generating a SSL certificate..."
-./acme.sh --issue -d mail.${DOMAIN_NAME} -d ${DOMAIN_NAME} -k 4096 --dns dns_online_rust --dnssleep 5 1>&2 || :
+./acme.sh --issue -d mail.${DOMAIN_NAME} -k 4096 --dns dns_online_rust --dnssleep 5 1>&2 || :
 # Set proper permissions on certificate files
 chmod 640 /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key
 

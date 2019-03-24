@@ -7,12 +7,13 @@ COPY prefix/usr/libexec /usr/libexec
 COPY prefix/usr/sbin /usr/sbin
 
 # Install required software and deps
-RUN apk add openssl curl dovecot-lmtpd dkimproxy libevent libasr fts libressl
+RUN apk add openssl curl dovecot-lmtpd dovecot-pigeonhole-plugin dkimproxy libevent libasr fts libressl
 
 VOLUME ["/data", "/root/.acme.sh"]
 EXPOSE 25/tcp
 EXPOSE 587/tcp
 EXPOSE 993/tcp
+EXPOSE 4190/tcp
 
 COPY config /root/config
 CMD /root/config/config_gen.sh
