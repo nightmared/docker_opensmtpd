@@ -2,7 +2,7 @@ FROM alpine:edge as opensmtpd-builder
 
 RUN apk update && apk upgrade && apk add wget tar
 
-ENV version "6.4.1p2"
+ENV version "6.4.2p1"
 ENV package opensmtpd-${version}
 ENV file ${package}.tar.gz
 
