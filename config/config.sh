@@ -57,15 +57,15 @@ chown -R _dkim:_dkim /etc/dkimproxy
 DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p' | tr -d '\n')
 echo "Updating DKIM entries..."
 # Remove previous DKIM entries
-dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -v clean-dkim-$(date +%s) 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -z clean-dkim-$(date +%s) 1>&2
 # Add the DKIM key to the DNS
-dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o add -v dkim-${DKIM_SELECTOR}-$(date +%s) -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -d "\"v=DKIM1; p=${DKIM_KEY}\"" 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o add -z dkim-${DKIM_SELECTOR}-$(date +%s) -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. -d "\"v=DKIM1; p=${DKIM_KEY}\"" 1>&2
 
 PUBLIC_IP=$(curl -s -4 ifconfig.me/ip)
 [ "z${PUBLIC_IP}" = "z" ] && echo "Couldn't determine your public ip address !" && exit 1
 echo "Updating mail.${DOMAIN_NAME} DNS entry (beware, IPv4 only !)..."
-dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -t "A" -n mail.${DOMAIN_NAME}. -v clean-dns-$(date +%s) 1>&2
-dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o add -t "A" -v dns-mail-$(date +%s) -n mail.${DOMAIN_NAME}. -d ${PUBLIC_IP} 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o delete -t "A" -n mail.${DOMAIN_NAME}. -z clean-dns-$(date +%s) 1>&2
+dnsapi/le_dns_online -a ${ONLINE_API_KEY} -o add -t "A" -z dns-mail-$(date +%s) -n mail.${DOMAIN_NAME}. -d ${PUBLIC_IP} 1>&2
 
 # Setting up permissions
 chown -R contact:contact /data
