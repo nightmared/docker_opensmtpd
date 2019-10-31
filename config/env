@@ -1,0 +1,13 @@
+exit_invalid_env() {
+	echo "You didn't provide the required environment variable $1, exiting..."
+	exit 1
+}
+
+export DKIM_SELECTOR=docker
+
+# Do not forget to pass in arguments in the environment.
+[ -n "$DOMAIN_NAME" ] || exit_invalid_env DOMAIN_NAME
+[ -n "$ONLINE_API_KEY" ] || exit_invalid_env ONLINE_API_KEY
+
+# Use staging if the signaling file is present
+[ -e $BASEDIR/le_staging ] && ACME_OPTS="--staging"

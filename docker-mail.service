@@ -1,5 +1,7 @@
 [Unit]
 Description=Mail server
+StartLimitIntervalSec=90
+StartLimitBurst=2
 
 [Service]
 Type=simple
