@@ -103,12 +103,6 @@ echo ""
 echo "Yay, preparation succeeded !"
 echo "Starting now..."
 
-onexit() {
-	echo "Child process exited. Quitting..."
-	exit 1
-}
-trap onexit SIGCHLD
-
 /usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --user=_dkim --group=_dkim >>/data/dkimproxy.log 2>&1 &
 /usr/sbin/smtpd -f /etc/mail/smtpd.conf -d >>/data/smtp.log 2>&1 &
 /usr/sbin/dovecot -F >>/data/dovecot.log 2>&1 &
