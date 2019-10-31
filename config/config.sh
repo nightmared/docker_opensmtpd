@@ -22,11 +22,12 @@ create_users() {
 	mkdir -p /data/users
 	while read line;
 	do
-		user="$(echo ${line} | cut -d: -f1)"
-		password="$(echo ${line} | cut -d: -f2)"
+		uid="$(echo ${line} | cut -d: -f1)"
+		user="$(echo ${line} | cut -d: -f2)"
+		password="$(echo ${line} | cut -d: -f3)"
 
 		# Create user
-		adduser -D -g "Mail user" -h "/data/users/${user}" -s /sbin/nologin "${user}"
+		adduser -D -g "Mail user" -h "/data/users/${user}" -s /sbin/nologin -u ${uid} "${user}"
 		echo "${user}:${password}" | chpasswd 2>/dev/null
 
 		# Assign user to the dovecot auth database
