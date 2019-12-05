@@ -10,4 +10,9 @@ export DKIM_SELECTOR=docker
 [ -n "$ONLINE_API_KEY" ] || exit_invalid_env ONLINE_API_KEY
 
 # Use staging if the signaling file is present
-[ -e $BASEDIR/le_staging ] && ACME_OPTS="--staging"
+if [ -e $BASEDIR/le_staging ]; then
+	export ACME_OPTS="--staging"
+fi
+
+# Update the nameserver
+echo "nameserver 1.1.1.1" >/etc/resolv.conf

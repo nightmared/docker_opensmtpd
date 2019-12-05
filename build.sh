@@ -9,7 +9,7 @@ while [ $i -le $# ]; do
 	i=$((i+1))
 done
 
-IMAGE_NAME=opensmtpd-test
+IMAGE_NAME=opensmtpd
 
 docker build -t ${IMAGE_NAME} -f Dockerfile ${DOCKER_BUILDER_ARGS} .
 docker save ${IMAGE_NAME} > ${IMAGE_NAME}.tar
