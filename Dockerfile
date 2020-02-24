@@ -2,19 +2,19 @@ FROM alpine:latest as opensmtpd-builder
 
 RUN apk update && apk upgrade && apk add wget tar
 
-ENV version "6.6.0"
-ENV file ${version}.tar.gz
+ENV version "6.6.4p1"
+ENV file opensmtpd-${version}.tar.gz
 
 # Installing deps
 RUN apk add git gcc openssl-dev libevent-dev libc-dev fts-dev libasr-dev zlib-dev make bison file automake autoconf libtool bison
 
-# Downloading the "portable edition"
-RUN git clone -b portable git://github.com/OpenSMTPD/OpenSMTPD.git /build/opensmtpd
-
+# Downloading and extracting the package
+RUN mkdir /build && cd /build && wget https://www.opensmtpd.org/archives/${file} && tar xvf ${file}
 # Building the package
-WORKDIR /build/opensmtpd
+WORKDIR /build/opensmtpd-${version}
 RUN ./bootstrap
 RUN ./configure --with-pie --prefix=/usr && make -j4 && make install DESTDIR=/output
+
 RUN git clone https://github.com/Neilpang/acme.sh.git /acme.sh
 
 FROM alpine:latest as opensmtpd

@@ -5,7 +5,8 @@ StartLimitBurst=2
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/docker run --rm -v /root/mail-data:/data -v /root/mail-certifs:/root/.acme.sh -p 25:25 -p 587:587 -p 993:993 -p 4190:4190 -h mail.nightmared.fr --name immutable_bastard opensmtpd
+ExecStartPre=/bin/cp /SOMEWHERE/mail-users /SOMEWHERE/mail-data/users-descr
+ExecStart=/usr/bin/docker run --rm -v /SOMEWHERE/mail-data:/data -v /SOMEWHERE/mail-certifs:/SOMEWHERE/.acme.sh --network host -h mail.MYTLD --env-file /SOMEWHERE/mail-env --name immutable_bastard opensmtpd
 ExecStop=/usr/bin/docker stop -t 0 immutable_bastard
 Restart=always
 

@@ -14,5 +14,7 @@ if [ -e $BASEDIR/le_staging ]; then
 	export ACME_OPTS="--staging"
 fi
 
+ETH=enp0s20
+
 # Update the nameserver
 echo "nameserver 1.1.1.1" >/etc/resolv.conf
