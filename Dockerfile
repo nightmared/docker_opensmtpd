@@ -2,7 +2,7 @@ FROM alpine:latest as opensmtpd-builder
 
 RUN apk update && apk upgrade && apk add wget tar
 
-ENV version "6.7.0p1"
+ENV version "6.7.1p1"
 ENV file opensmtpd-${version}.tar.gz
 
 # Installing deps
