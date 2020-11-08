@@ -36,6 +36,6 @@ EXPOSE 4190/tcp
 
 # TLS certificates
 # Downloading a statically generated binary for le_dns_online
-RUN wget https://nightmared.fr/le_dns_online -O /root/config/acme.sh/dnsapi/le_dns_online
-RUN wget https://raw.githubusercontent.com/nightmared/le_dns_online/master/lets_encrypt/dns_online_rust.sh -O /root/config/acme.sh/dnsapi/dns_online_rust.sh
+RUN wget -q https://nightmared.fr/le_dns_online -O /root/config/acme.sh/dnsapi/le_dns_online
+RUN wget -q https://raw.githubusercontent.com/nightmared/le_dns_online/master/lets_encrypt/dns_online_rust.sh -O /root/config/acme.sh/dnsapi/dns_online_rust.sh
 CMD /root/config/config.sh
