@@ -69,10 +69,10 @@ cd $BASEDIR/acme.sh
 echo "Generating a SSL certificate..."
 
 # Update the api key in the LE challenge script
-sed -i -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" dnsapi/dns_online_rust.sh
+sed -i -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" dnsapi/dns_online_rust_preloaded.sh
 chmod +x dnsapi/le_dns_online
 
-./acme.sh --issue -d mail.${DOMAIN_NAME} -k 4096 --dns dns_online_rust --dnssleep 5 $ACME_OPTS 1>&2 || :
+./acme.sh --issue -d mail.${DOMAIN_NAME} -k 4096 --dns dns_online_rust_preloaded --dnssleep 5 $ACME_OPTS 1>&2 || :
 
 [ ! -e /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key ] && echo "The private key could not be found" && exit 1
 

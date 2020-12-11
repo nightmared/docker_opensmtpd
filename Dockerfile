@@ -9,7 +9,7 @@ ENV file opensmtpd-${version}.tar.gz
 RUN apk add git gcc openssl-dev libevent-dev libc-dev fts-dev libasr-dev zlib-dev make bison file automake autoconf libtool bison
 
 # Downloading and extracting the package
-RUN mkdir /build && cd /build && wget https://www.opensmtpd.org/archives/${file} && tar xvf ${file}
+RUN mkdir /build && cd /build && wget https://github.com/OpenSMTPD/OpenSMTPD/releases/download/${version}/${file} && tar xvf ${file}
 # Building the package
 WORKDIR /build/opensmtpd-${version}
 RUN ./bootstrap
@@ -37,5 +37,5 @@ EXPOSE 4190/tcp
 # TLS certificates
 # Downloading a statically generated binary for le_dns_online
 RUN wget -q https://nightmared.fr/le_dns_online -O /root/config/acme.sh/dnsapi/le_dns_online
-RUN wget -q https://raw.githubusercontent.com/nightmared/le_dns_online/master/lets_encrypt/dns_online_rust_preloaded.sh -O /root/config/acme.sh/dnsapi/dns_online_rust.sh
+RUN wget -q https://raw.githubusercontent.com/nightmared/le_dns_online/master/lets_encrypt/dns_online_rust_preloaded.sh -O /root/config/acme.sh/dnsapi/dns_online_rust_preloaded.sh
 CMD /root/config/config.sh
