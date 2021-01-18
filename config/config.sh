@@ -3,7 +3,6 @@
 export BASEDIR=/root/config
 source ${BASEDIR}/env
 
-
 create_users() {
 	echo "Creating users..."
 

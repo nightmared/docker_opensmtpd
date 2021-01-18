@@ -1,15 +1,12 @@
 FROM alpine:latest as opensmtpd-builder
 
-RUN apk update && apk upgrade && apk add wget tar
+RUN apk update && apk upgrade && apk add wget tar git gcc openssl-dev libevent-dev libc-dev fts-dev libasr-dev zlib-dev make bison file automake autoconf libtool bison
 
-ENV version "6.7.1p1"
+ENV version "6.8.0p2"
 ENV file opensmtpd-${version}.tar.gz
 
-# Installing deps
-RUN apk add git gcc openssl-dev libevent-dev libc-dev fts-dev libasr-dev zlib-dev make bison file automake autoconf libtool bison
-
 # Downloading and extracting the package
-RUN mkdir /build && cd /build && wget https://github.com/OpenSMTPD/OpenSMTPD/releases/download/${version}/${file} && tar xvf ${file}
+RUN mkdir /build && cd /build && wget https://www.opensmtpd.org/archives/${file} && tar xvf ${file}
 # Building the package
 WORKDIR /build/opensmtpd-${version}
 RUN ./bootstrap
