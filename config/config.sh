@@ -47,6 +47,23 @@ evaluate_file() {
 	done <$1 >$2
 }
 
+update_dns_entry() {
+	# for some bad reason (a limitation of nsupdate as of bind 9.16), we must split long entries as chunks of less than 255 characters. here we handle only the case where strlen \in [0, 510]
+	strlen=$(echo -n "$3" | wc -c)
+	if [ "$strlen" -ge 256 ]; then
+		part0=\"$(echo -n "$3" | dd bs=1 count=255 2>/dev/null)\"
+		part1=\"$(echo -n "$3" | dd bs=1 skip=255 count=255 2>/dev/null)\"
+	else
+		part0="$3"
+		part1=""
+	fi
+	(echo "server ${DOMAIN_NAME}";
+	echo "zone ${DOMAIN_NAME}";
+	echo "update delete $1 $2";
+	echo "update add $1 3600 $2 $part0 $part1";
+	echo "send") | nsupdate -k /root/bind.keys
+}
+
 cd $BASEDIR
 
 echo "Welcome to the all-in-one docker_smtpd service..."
@@ -64,19 +81,14 @@ evaluate_file dovecot.conf /etc/dovecot/dovecot.conf
 evaluate_file dkimproxy_out.conf /etc/dkimproxy/dkimproxy_out.conf
 
 # Time to generate some certificates
-cd $BASEDIR/acme.sh
 echo "Generating a SSL certificate..."
 
-# Update the api key in the LE challenge script
-sed -i -E "s/^export ONLINE_API_KEY\=.*$/export ONLINE_API_KEY=${ONLINE_API_KEY}/" dnsapi/dns_online_rust_preloaded.sh
-chmod +x dnsapi/le_dns_online
-
-./acme.sh --issue -d mail.${DOMAIN_NAME} -k 4096 --dns dns_online_rust_preloaded --dnssleep 5 $ACME_OPTS 1>&2 || :
-
-[ ! -e /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key ] && echo "The private key could not be found" && exit 1
+mkdir -p /root/.lego
+lego --accept-tos --path /root/.lego -d mail.${DOMAIN_NAME} --email "contact+le@nightmared.fr" --key-type ec256 --dns rfc2136 --dns.disable-cp $LEGO_OPTS run
 
 # Set proper permissions on certificate files
-chmod 640 /root/.acme.sh/mail.${DOMAIN_NAME}/mail.${DOMAIN_NAME}.key
+chmod 640 /root/.lego/certificates/mail.${DOMAIN_NAME}.crt
+chmod 640 /root/.lego/certificates/mail.${DOMAIN_NAME}.key
 
 echo "Generating a new DKIM private key..."
 openssl genrsa -out /etc/dkimproxy/private.key 2048
@@ -85,18 +97,15 @@ chown -R _dkim:_dkim /etc/dkimproxy
 DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p' | tr -d '\n')
 
 echo "Adding DKIM entries in the DNS registry..."
-# Update DKIM entries (they must already exist similar DKIM entries for this command to suceed)
-dnsapi/le_dns_online -a ${ONLINE_API_KEY} -t TXT -n ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME}. update --new-value "\"v=DKIM1; p=${DKIM_KEY}\"" 1>&2
+update_dns_entry ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME} TXT "v=DKIM1;p=${DKIM_KEY}"
 
 # Request our public IP
-PUBLIC_IP=$(curl -m 3 -s -4 https://nightmared.fr/ip)
+PUBLIC_IP=$(curl -m 3 -s -4 https://api.ipify.org)
 [ -z "${PUBLIC_IP}" ] && echo "Couldn't determine your public ip address !" && exit 1
 
 echo "Updating mail.${DOMAIN_NAME} DNS entry (beware, IPv4 only !)..."
-dnsapi/le_dns_online -a ${ONLINE_API_KEY} -t A -n mail.${DOMAIN_NAME}. update --new-value ${PUBLIC_IP} 1>&2
+update_dns_entry mail.${DOMAIN_NAME} A ${PUBLIC_IP}
 
-echo ""
-echo ""
 echo "Yay, preparation succeeded !"
 echo "Starting now..."
 
