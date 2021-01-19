@@ -84,7 +84,13 @@ evaluate_file dkimproxy_out.conf /etc/dkimproxy/dkimproxy_out.conf
 echo "Generating a SSL certificate..."
 
 mkdir -p /root/.lego
-lego --accept-tos --path /root/.lego -d mail.${DOMAIN_NAME} --email "contact+le@nightmared.fr" --key-type ec256 --dns rfc2136 --dns.disable-cp $LEGO_OPTS run
+if [ -e "/root/.lego/certificates/mail.${DOMAIN_NAME}.crt" ]; then
+       LEGO_CMD="renew --days 30 --reuse-key"
+else
+       LEGO_CMD="run"
+fi
+
+lego --accept-tos --path /root/.lego -d mail.${DOMAIN_NAME} --email "contact+le@nightmared.fr" --key-type ec256 --dns rfc2136 --dns.disable-cp $LEGO_OPTS $LEGO_CMD
 
 # Set proper permissions on certificate files
 chmod 640 /root/.lego/certificates/mail.${DOMAIN_NAME}.crt
