@@ -72,7 +72,7 @@ create_users
 # Evaluate our smtpd.conf to substitute variables
 mkdir /etc/mail
 evaluate_file smtpd.conf /etc/mail/smtpd.conf
-cp aliases /etc/mail/
+cp aliases whitelisted_local_ips /etc/mail/
 
 # generate dovecot.conf
 evaluate_file dovecot.conf /etc/dovecot/dovecot.conf
