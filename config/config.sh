@@ -19,6 +19,7 @@ create_users() {
 
 	[ ! -e /data/users-descr ] && echo "/data/users-descr does not exist, make sure to provide one" && exit 1
 	mkdir -p /data/users
+	truncate -s 0 /etc/dovecot/imap.passwd
 	while read line;
 	do
 		uid="$(echo ${line} | cut -d: -f1)"
@@ -26,13 +27,13 @@ create_users() {
 		password="$(echo ${line} | cut -d: -f3)"
 
 		# Create user
-		adduser -D -g "Mail user" -h "/data/users/${user}" -s /sbin/nologin -u ${uid} "${user}"
+		adduser -D -g "Mail user $user" -h "/data/users/${user}" -s /sbin/nologin -u ${uid} "${user}"
 		echo "${user}:${password}" | chpasswd 2>/dev/null
 
 		# Assign user to the dovecot auth database
 		UID=$(cat /etc/passwd |grep -E "^${user}:" | cut -d: -f3)
 		CRYPT=$(echo ${password} | /usr/bin/cryptpw -m sha512)
-		echo "contact:{SHA512-CRYPT}${CRYPT}:${UID}:${UID}::/data/users/${user}::userdb_mail=maildir:~/Maildir" > /etc/dovecot/imap.passwd
+		echo "$user:{SHA512-CRYPT}${CRYPT}:${UID}:${UID}::/data/users/${user}::userdb_mail=maildir:~/Maildir" >> /etc/dovecot/imap.passwd
 	done </data/users-descr
 
 	# Delete the password file prior to launchng services
