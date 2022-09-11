@@ -1,11 +1,11 @@
-MAILER-DAEMON contact
-postmaster contact
-daemon contact
-ftp-bugs contact
-operator contact
-www contact
-internet contact
-abuse contact
-security contact
-git contact
-cron contact
+MAILER-DAEMON:contact
+postmaster:contact
+daemon:contact
+ftp-bugs:contact
+operator:contact
+www:contact
+internet:contact
+abuse:contact
+security:contact
+git:contact
+cron:contact

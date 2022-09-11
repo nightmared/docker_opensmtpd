@@ -6,12 +6,6 @@ source ${BASEDIR}/env
 create_users() {
 	echo "Creating users..."
 
-	echo -e "\t* Creating system users..."
-	mkdir -p /var/empty
-	adduser -D -g "DKIM proxy" -h /var/empty -s /sbin/nologin _dkim
-	adduser -D -g "SMTP Daemon" -h /var/empty -s /sbin/nologin _smtpd
-	adduser -D -g "SMTPD Queue" -h /var/empty -s /sbin/nologin _smtpq
-
 	echo -e "\t* Creating user accounts..."
 
 	# Cleanup the dovecot password
@@ -20,6 +14,7 @@ create_users() {
 	[ ! -e /data/users-descr ] && echo "/data/users-descr does not exist, make sure to provide one" && exit 1
 	mkdir -p /data/users
 	truncate -s 0 /etc/dovecot/imap.passwd
+	truncate -s 0 /etc/postfix/sender_login_maps
 	while read line;
 	do
 		uid="$(echo ${line} | cut -d: -f1)"
@@ -34,6 +29,8 @@ create_users() {
 		UID=$(cat /etc/passwd |grep -E "^${user}:" | cut -d: -f3)
 		CRYPT=$(echo ${password} | /usr/bin/cryptpw -m sha512)
 		echo "$user:{SHA512-CRYPT}${CRYPT}:${UID}:${UID}::/data/users/${user}::userdb_mail=maildir:~/Maildir" >> /etc/dovecot/imap.passwd
+
+		echo "$user:$user" >> /etc/postfix/sender_login_maps
 	done </data/users-descr
 
 	# Delete the password file prior to launchng services
@@ -46,6 +43,16 @@ evaluate_file() {
 	do
 		eval "echo \"$line\""
 	done <$1 >$2
+}
+
+evaluate_file_with_percent_separator() {
+	attr_list=$(sed -r 's/(%[^%]+%)/\n\1\n/gp' $1 | sed -rn 's/%([^%]+)%/\1/p' | sort | uniq)
+	cp $1 $2
+	for attr in $attr_list
+	do
+		attr_value=$(eval "echo \${${attr}}")
+		sed -i "s#%${attr}%#${attr_value}#g" $2
+	done
 }
 
 update_dns_entry() {
@@ -71,15 +78,18 @@ echo "Welcome to the all-in-one docker_smtpd service..."
 create_users
 
 # Evaluate our smtpd.conf to substitute variables
-mkdir /etc/mail
-evaluate_file smtpd.conf /etc/mail/smtpd.conf
-cp aliases whitelisted_local_ips /etc/mail/
+evaluate_file_with_percent_separator main.cf /etc/postfix/main.cf
+cp master.cf /etc/postfix/
+
+cp aliases /etc/
+postalias lmdb:/etc/aliases
+postalias lmdb:/etc/postfix/sender_login_maps
 
 # generate dovecot.conf
 evaluate_file dovecot.conf /etc/dovecot/dovecot.conf
 
 # DKIM configuration
-evaluate_file dkimproxy_out.conf /etc/dkimproxy/dkimproxy_out.conf
+evaluate_file opendkim.conf /etc/opendkim/opendkim.conf
 
 # Time to generate some certificates
 echo "Generating a SSL certificate..."
@@ -98,10 +108,9 @@ chmod 640 /root/.lego/certificates/mail.${DOMAIN_NAME}.crt
 chmod 640 /root/.lego/certificates/mail.${DOMAIN_NAME}.key
 
 echo "Generating a new DKIM private key..."
-openssl genrsa -out /etc/dkimproxy/private.key 2048
-openssl rsa -in /etc/dkimproxy/private.key -pubout -out /etc/dkimproxy/public.key
-chown -R _dkim:_dkim /etc/dkimproxy
-DKIM_KEY=$(cat /etc/dkimproxy/public.key | sed -n '/PUBLIC KEY/!p' | tr -d '\n')
+openssl genrsa -out /etc/dkim.key 2048
+openssl rsa -in /etc/dkim.key -pubout -out /etc/dkim.pub.key
+DKIM_KEY=$(cat /etc/dkim.pub.key | sed -n '/PUBLIC KEY/!p' | tr -d '\n')
 
 echo "Adding DKIM entries in the DNS registry..."
 update_dns_entry ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME} TXT "v=DKIM1;p=${DKIM_KEY}"
@@ -116,9 +125,9 @@ update_dns_entry mail.${DOMAIN_NAME} A ${PUBLIC_IP}
 echo "Yay, preparation succeeded !"
 echo "Starting now..."
 
-/usr/sbin/dkimproxy.out --conf_file=/etc/dkimproxy/dkimproxy_out.conf --user=_dkim --group=_dkim >>/data/dkimproxy.log 2>&1 &
-/usr/sbin/smtpd -f /etc/mail/smtpd.conf -d >>/data/smtp.log 2>&1 &
+/usr/sbin/opendkim >>/data/dkimproxy.log 2>&1 &
 /usr/sbin/dovecot -F >>/data/dovecot.log 2>&1 &
+/usr/sbin/postfix start-fg >>/data/smtp.log 2>&1 &
 
 # This container auto-stop after 15 days, this is a simple way of ensuring the TLS certificates are always good (as well as maintaining an important DKIM key turnover)
 sleep 15d

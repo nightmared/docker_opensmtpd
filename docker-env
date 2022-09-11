@@ -1,4 +1,6 @@
 DOMAIN_NAME=nightmared.fr
+DKIM_SELECTOR=docker
+WHITELISTED_IPS=127.0.0.0/8,10.0.0.0/8
 RFC2136_NAMESERVER=nightmared.fr
 RFC2136_TSIG_ALGORITHM=hmac-sha256.
 RFC2136_TSIG_KEY=something.nightmared.fr.

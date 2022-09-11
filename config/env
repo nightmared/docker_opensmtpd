@@ -3,18 +3,13 @@ exit_invalid_env() {
 	exit 1
 }
 
-export DKIM_SELECTOR=docker
-
 # Do not forget to pass in arguments in the environment.
-[ -n "$DOMAIN_NAME" ] || exit_invalid_env DOMAIN_NAME
-[ -n "$RFC2136_NAMESERVER" ] || exit_invalid_env RFC2136_NAMESERVER
-[ -n "$RFC2136_TSIG_ALGORITHM" ] || exit_invalid_env RFC2136_TSIG_ALGORITHM
-[ -n "$RFC2136_TSIG_KEY" ] || exit_invalid_env RFC2136_TSIG_KEY
-[ -n "$RFC2136_TSIG_SECRET" ] || exit_invalid_env RFC2136_TSIG_SECRET
+for attr in DOMAIN_NAME HOSTNAME DKIM_SELECTOR WHITELISTED_IPS RFC2136_NAMESERVER RFC2136_TSIG_ALGORITHM RFC2136_TSIG_KEY RFC2136_TSIG_SECRET
+do
+	[ -n "$(eval echo \${${attr}})" ] || exit_invalid_env $attr
+done
 
 # Use staging if the signaling file is present
 if [ -e $BASEDIR/le_staging ]; then
 	export LEGO_OPTS="--server https://acme-staging-v02.api.letsencrypt.org/directory"
 fi
-
-ETH=eth0

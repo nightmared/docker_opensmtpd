@@ -1,0 +1,46 @@
+compatibility_level = 3.6
+
+inet_protocols = ipv4
+
+mynetworks = %WHITELISTED_IPS%
+mydomain = %DOMAIN_NAME%
+myorigin = $mydomain
+myhostname = %HOSTNAME%
+mydestination = $mydomain, $myhostname, mail.$mydomain, localhost.$mydomain, localhost
+
+smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_sender_restrictions = permit_mynetworks, reject_non_fqdn_sender, reject_unknown_sender_domain, reject_authenticated_sender_login_mismatch
+
+alias_maps = lmdb:/etc/aliases
+
+recipient_delimiter = +
+
+# Only allow senders to emit mails for their own accounts
+smtpd_sender_login_maps = lmdb:/etc/postfix/sender_login_maps
+
+# SMTP auth via dovecot
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = dovecot
+smtpd_sasl_local_domain = $mydomain
+smtpd_sasl_path = private/auth-dovecot
+
+# LTMP: transfer mails to dovecot
+mailbox_transport = lmtp:unix:private/lmtp-dovecot
+
+
+# TLS configuration
+smtp_tls_CApath = /etc/ssl/certs/
+tls_append_default_CA = no
+smtpd_tls_auth_only = yes
+smtpd_tls_cert_file = /root/.lego/certificates/mail.%DOMAIN_NAME%.crt
+smtpd_tls_key_file = /root/.lego/certificates/mail.%DOMAIN_NAME%.key
+smtpd_tls_protocols = >=TLSv1.1
+smtpd_tls_security_level = encrypt
+
+# Log to stdout
+maillog_file = /dev/stdout
+
+# DKIM
+smtpd_milters = inet:127.0.0.1:12345
+non_smtpd_milters = $smtpd_milters
+milter_default_action = accept

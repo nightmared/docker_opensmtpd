@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-IMAGE_NAME=opensmtpd
+IMAGE_NAME=smtpd
 EXPORT=1
 
 rm -f ${IMAGE_NAME}.tar
