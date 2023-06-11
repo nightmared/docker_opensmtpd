@@ -15,6 +15,9 @@ alias_maps = lmdb:/etc/aliases
 
 recipient_delimiter = +
 
+# Max message size = 40MB
+message_size_limit = 41943040
+
 # Only allow senders to emit mails for their own accounts
 smtpd_sender_login_maps = lmdb:/etc/postfix/sender_login_maps
 

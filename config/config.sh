@@ -116,7 +116,7 @@ echo "Adding DKIM entries in the DNS registry..."
 update_dns_entry ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME} TXT "v=DKIM1;p=${DKIM_KEY}"
 
 # Request our public IP
-PUBLIC_IP=$(curl -m 3 -s -4 https://api.ipify.org)
+PUBLIC_IP=$(curl -m 3 -s -4 https://nightmared.fr/ip)
 [ -z "${PUBLIC_IP}" ] && echo "Couldn't determine your public ip address !" && exit 1
 
 echo "Updating mail.${DOMAIN_NAME} DNS entry (beware, IPv4 only !)..."
@@ -125,7 +125,7 @@ update_dns_entry mail.${DOMAIN_NAME} A ${PUBLIC_IP}
 echo "Yay, preparation succeeded !"
 echo "Starting now..."
 
-/usr/sbin/opendkim >>/data/dkimproxy.log 2>&1 &
+/usr/sbin/opendkim -f >>/data/dkimproxy.log 2>&1 &
 /usr/sbin/dovecot -F >>/data/dovecot.log 2>&1 &
 /usr/sbin/postfix start-fg >>/data/smtp.log 2>&1 &
 
