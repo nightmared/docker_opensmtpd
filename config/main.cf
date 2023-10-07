@@ -38,7 +38,7 @@ smtpd_tls_auth_only = yes
 smtpd_tls_cert_file = /root/.lego/certificates/mail.%DOMAIN_NAME%.crt
 smtpd_tls_key_file = /root/.lego/certificates/mail.%DOMAIN_NAME%.key
 smtpd_tls_protocols = >=TLSv1.1
-smtpd_tls_security_level = encrypt
+smtpd_tls_security_level = may
 
 # Log to stdout
 maillog_file = /dev/stdout
