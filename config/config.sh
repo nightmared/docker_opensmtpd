@@ -101,7 +101,7 @@ else
        LEGO_CMD="run"
 fi
 
-lego --accept-tos --path /root/.lego -d mail.${DOMAIN_NAME} --email "contact+le@nightmared.fr" --key-type ec256 --dns rfc2136 --dns.disable-cp $LEGO_OPTS $LEGO_CMD
+lego --accept-tos --path /root/.lego -d mail.${DOMAIN_NAME} --email "contact+le@nightmared.fr" --key-type ec256 --dns rfc2136 --dns.propagation-disable-ans $LEGO_OPTS $LEGO_CMD
 
 # Set proper permissions on certificate files
 chmod 640 /root/.lego/certificates/mail.${DOMAIN_NAME}.crt
