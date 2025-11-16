@@ -96,7 +96,7 @@ echo "Generating a SSL certificate..."
 
 mkdir -p /root/.lego
 if [ -e "/root/.lego/certificates/mail.${DOMAIN_NAME}.crt" ]; then
-       LEGO_CMD="renew --days 30 --reuse-key"
+       LEGO_CMD="renew --days 30 --reuse-key --no-random-sleep"
 else
        LEGO_CMD="run"
 fi
