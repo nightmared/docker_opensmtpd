@@ -116,11 +116,13 @@ echo "Adding DKIM entries in the DNS registry..."
 update_dns_entry ${DKIM_SELECTOR}._domainkey.${DOMAIN_NAME} TXT "v=DKIM1;p=${DKIM_KEY}"
 
 # Request our public IP
-PUBLIC_IP=$(curl -m 3 -s -4 https://nightmared.fr/ip)
-[ -z "${PUBLIC_IP}" ] && echo "Couldn't determine your public ip address !" && exit 1
+PUBLIC_IP=$(curl -m 3 -s -4 https://nightmared.fr/ip || curl -m 3 -s https://api.ipify.org)
+PUBLIC_IP6=$(curl -m 3 -s -6 https://nightmared.fr/ip || curl -m 3 -s https://api6.ipify.org)
+[ -z "${PUBLIC_IP}" -o -z "${PUBLIC_IP6}" ] && echo "Couldn't determine your public ip address !" && exit 1
 
-echo "Updating mail.${DOMAIN_NAME} DNS entry (beware, IPv4 only !)..."
+echo "Updating mail.${DOMAIN_NAME} DNS entry..."
 update_dns_entry mail.${DOMAIN_NAME} A ${PUBLIC_IP}
+update_dns_entry mail.${DOMAIN_NAME} AAAA ${PUBLIC_IP6}
 
 echo "Yay, preparation succeeded !"
 echo "Starting now..."
